@@ -64,7 +64,9 @@ JobCard_hour=EDAHelper.getHour(df_merged,'JobCardTime')
 #3.Categorise service centers who are operating higher than usual time,
 #4. Identify peak hours, less peak hour, free hour
 #5.Modal can be created to classify to see if month is given will the service center have peak?
-#5.From Description Create bag of words visulization.
+#6.From Description Create bag of words visulization.
+#7.Identify Resourcing Needs?
+#Is there anything fishy?
 
 
 import numpy as np
