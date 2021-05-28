@@ -66,3 +66,6 @@ JobCard_hour=EDAHelper.getHour(df_merged,'JobCardTime')
 #5.Modal can be created to classify to see if month is given will the service center have peak?
 #5.From Description Create bag of words visulization.
 
+
+import numpy as np
+temp['Policyno_'] = np.where(temp['Policyno_']=='0', 'NoInfo',temp['Policyno_'])

@@ -137,3 +137,14 @@ def getHour(df,column):
         hour_[i]=df[column][i].hour
     df=pd.DataFrame.from_dict(hour_,orient='index')
     return df    
+
+def dataTypeCheck(df,column):
+    index_list_not_str=[]
+    for i in range(0,len(df)):
+        if type(df[column][i])==float:
+            index_list_not_str.append(i)
+        
+    return index_list_not_str
+            
+        
+    
