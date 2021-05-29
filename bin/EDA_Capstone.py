@@ -71,3 +71,36 @@ JobCard_hour=EDAHelper.getHour(df_merged,'JobCardTime')
 
 import numpy as np
 temp['Policyno_'] = np.where(temp['Policyno_']=='0', 'NoInfo',temp['Policyno_'])
+
+######Analysis of Monthly#############
+EDA_Monthly=df_merged[['index','total_days', 'invoice_month','invoice_hour','State','Make','Netvalue','PlantName1']]
+
+import seaborn as sns
+
+sns.barplot(EDA_Monthly.invoice_month,EDA_Monthly.State)
+
+sns.set_theme(style="whitegrid")
+#EDA_Monthly = sns.load_dataset("EDA_Monthly")
+
+sns.barplot(x="State", y="invoice_month", data=EDA_Monthly)
+
+
+EDA_Monthly[EDA_Monthly.State=='Assam']['invoice_month'].value_counts()
+
+State_list=set(EDA_Monthly.State)
+
+monthly_vehicle=pd.DataFrame()
+for i in State_list:
+    monthly_vehicle[i]=EDA_Monthly[EDA_Monthly.State==i]['invoice_month'].value_counts()
+    '''for j in range(0,len(monthly_vehicle.index)):
+        print(monthly_vehicle[monthly_vehicle.index[j]])'''
+        
+monthly_revenue=pd.DataFrame()
+for i in State_list:
+    monthly_revenue[i]=EDA_Monthly[EDA_Monthly.State==i]['invoice_month'].value_counts()
+    '''for j in range(0,len(monthly_vehicle.index)):
+        print(monthly_vehicle[monthly_vehicle.index[j]])'''
+    
+    
+
+
