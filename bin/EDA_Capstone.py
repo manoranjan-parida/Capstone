@@ -7,10 +7,11 @@ Created on Fri May 28 23:51:10 2021
 
 import EDAHelper
 import pandas as pd
+import matplotlib as plt
 #File Path for Data Read
 
 
-path='E:/GreyAtom/Capstone/230521/fin_data.csv'
+path='C:/Users/Komali Srinivas/Day1/capstone/fin_data.csv'
 
 #Converting DataType of Date & Timestamp column
 df_merged=pd.read_csv(path)
@@ -59,7 +60,7 @@ invoice_hour=EDAHelper.getHour(df_merged,'InvoiceTime')
 JobCard_hour=EDAHelper.getHour(df_merged,'JobCardTime')
 
 #TODO
-#1.Calculate difference between Job Date and Invoice date.
+#1.Calculate difference between Job Date and Invoice date. - Done
 #2.Calculate difference between jobtime and invoice time to see if work has been done in less than X hours
 #3.Categorise service centers who are operating higher than usual time,
 #4. Identify peak hours, less peak hour, free hour
@@ -73,7 +74,9 @@ import numpy as np
 temp['Policyno_'] = np.where(temp['Policyno_']=='0', 'NoInfo',temp['Policyno_'])
 
 ######Analysis of Monthly#############
-EDA_Monthly=df_merged[['index','total_days', 'invoice_month','invoice_hour','State','Make','Netvalue','PlantName1']]
+df_merged['invoice_month'] = invoice_month
+df_merged['total_days'] = total_days
+EDA_Monthly=df_merged[['index','total_days', 'invoice_month','State','Make','Netvalue','PlantName1','TotalValue']]
 
 import seaborn as sns
 
@@ -100,7 +103,32 @@ for i in State_list:
     monthly_revenue[i]=EDA_Monthly[EDA_Monthly.State==i]['invoice_month'].value_counts()
     '''for j in range(0,len(monthly_vehicle.index)):
         print(monthly_vehicle[monthly_vehicle.index[j]])'''
-    
-    
 
+makevsmonth = pd.DataFrame()
+Make_List = set(EDA_Monthly.Make)
+for i in Make_List:
+    makevsmonth[i]=EDA_Monthly[EDA_Monthly.Make==i]['invoice_month'].value_counts()
+
+#For getting state wise revenue model wise revenue  
+#state_revenue = pd.DataFrame()
+#for i in State_list:
+#    print(i)
+#    print(EDA_Monthly[EDA_Monthly.State==i]['TotalValue'].sum())
+#    state_revenue[i]=EDA_Monthly[EDA_Monthly.State==i]['TotalValue'].sum()
+
+monthly_state_revenue = pd.DataFrame()
+
+monthly_state_revenue = pd.pivot_table(EDA_Monthly, values='TotalValue', index=['invoice_month'],
+                    columns=['State'], aggfunc=np.sum)
+
+#For getting make wise revenue model wise revenue 
+monthly_make_revenue = pd.DataFrame()
+
+monthly_make_revenue = pd.pivot_table(EDA_Monthly, values='TotalValue', index=['invoice_month'],
+                    columns=['Make'], aggfunc=np.sum)
+
+#Plotting a bar plot for make and state vs revenue
+
+plt.figure(fig_size=(10,10))
+monthly_state_revenue.plot.bar()
 
