@@ -55,9 +55,9 @@ invoice_month=EDAHelper.getMonth(df_merged, 'InvoiceDate')
 JobCard_month=EDAHelper.getMonth(df_merged, 'JobCardDate')
 
 #Extracting Hour of Invoice Time
-invoice_hour=EDAHelper.getHour(df_merged,'InvoiceTime')
+df_merged['invoice_hour']=EDAHelper.getHour(df_merged,'InvoiceTime')
 #Extracting Hour of Invoice Time
-JobCard_hour=EDAHelper.getHour(df_merged,'JobCardTime')
+df_merged['JobCard_hour']=EDAHelper.getHour(df_merged,'JobCardTime')
 
 #TODO
 #1.Calculate difference between Job Date and Invoice date. - Done
@@ -76,7 +76,7 @@ temp['Policyno_'] = np.where(temp['Policyno_']=='0', 'NoInfo',temp['Policyno_'])
 ######Analysis of Monthly#############
 df_merged['invoice_month'] = invoice_month
 df_merged['total_days'] = total_days
-EDA_Monthly=df_merged[['index','total_days', 'invoice_month','State','Make','Netvalue','PlantName1','TotalValue']]
+EDA_Monthly=df_merged[['index','total_days','TotalValue', 'invoice_month','State','Make','Netvalue','PlantName1','TotalValue','invoice_hour','JobCard_hour']]
 
 import seaborn as sns
 
@@ -132,3 +132,55 @@ monthly_make_revenue = pd.pivot_table(EDA_Monthly, values='TotalValue', index=['
 plt.figure(fig_size=(10,10))
 monthly_state_revenue.plot.bar()
 
+
+###########Model Building##################
+data_model_cust_suggestion=df_merged[['OrderType','PlantName1','total_days']]
+
+#TODO
+#1.Add date and time for getting time taken in hour
+#Converting time delta in int
+data_model_cust_suggestion.total_days=data_model_cust_suggestion.total_days.dt.days
+
+#encoder_mapping=EDAHelper.labelEncoder_Mapper(Cat_data)
+
+Y=data_model_cust_suggestion['total_days']
+x=data_model_cust_suggestion.drop('total_days',axis=1)
+
+encoder_mapping_dmcs=EDAHelper.labelEncoder_Mapper(x)
+
+from sklearn.model_selection import train_test_split
+x_train,x_test,Y_train,Y_test=train_test_split(x,Y,test_size=0.2,random_state=9)
+
+from sklearn.linear_model import LogisticRegression
+
+log_reg = LogisticRegression(random_state=27)
+
+log_reg.fit(x_train,Y_train)
+
+acc = log_reg.score(x_test,Y_test)
+
+
+#Model Selection
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import RandomizedSearchCV
+
+max_features=['sqrt','log2']
+max_depth=[10,20,30,40,50]
+min_samples_leaf=[1,2,5]
+criterion=['gini','entropy']
+n_estimators=[100,500,1000]
+class_weight=['balanced','balanced_subsample']
+
+grid_param={"max_features":max_features,
+            "max_depth":max_depth,
+            "min_samples_leaf":min_samples_leaf,
+            "criterion":criterion,
+            "n_estimators":n_estimators,
+            "class_weight":class_weight}
+
+rf=RandomForestClassifier()
+
+rf_modal_selection=RandomizedSearchCV(estimator=rf,param_distributions=grid_param,n_iter=10,cv=5,random_state=3)
+
+rf_modal_selection.fit(x_train,Y_train)
+print(rf_modal_selection.best_params_)
