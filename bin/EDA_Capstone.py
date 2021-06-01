@@ -134,53 +134,171 @@ monthly_state_revenue.plot.bar()
 
 
 ###########Model Building##################
-data_model_cust_suggestion=df_merged[['OrderType','PlantName1','total_days']]
+data_model_cust_suggestion=df_merged[['OrderType','PlantName1','Make','Model',
+                                      'invoice_month','KMsReading','Service_Class']]
 
 #TODO
 #1.Add date and time for getting time taken in hour
 #Converting time delta in int
 data_model_cust_suggestion.total_days=data_model_cust_suggestion.total_days.dt.days
 
-#encoder_mapping=EDAHelper.labelEncoder_Mapper(Cat_data)
+#Segrigating data im Numerical and Categorical  
+Numeric_data_modal=data_model_cust_suggestion.select_dtypes(exclude='object')
+Cat_data_modal=data_model_cust_suggestion.select_dtypes(include='object')
+#Replace Na
+EDAHelper.replaceNa(Cat_data_modal)
+#Encoding Categorical Data
+encoder_mapping_dmcs=EDAHelper.labelEncoder_Mapper(Cat_data_modal)
 
-Y=data_model_cust_suggestion['total_days']
-x=data_model_cust_suggestion.drop('total_days',axis=1)
+#Merging two dataframe to form original
+data_model_cust=pd.concat([Numeric_data_modal, Cat_data_modal],axis=1)
 
-encoder_mapping_dmcs=EDAHelper.labelEncoder_Mapper(x)
+#Splitting Data
+y=data_model_cust['Service_Class']
+X=data_model_cust.drop('Service_Class',axis=1)
 
+#Train Test Split
 from sklearn.model_selection import train_test_split
-x_train,x_test,Y_train,Y_test=train_test_split(x,Y,test_size=0.2,random_state=9)
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=9)
 
-from sklearn.linear_model import LogisticRegression
-
-log_reg = LogisticRegression(random_state=27)
-
-log_reg.fit(x_train,Y_train)
-
-acc = log_reg.score(x_test,Y_test)
 
 
 #Model Selection
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
 
 max_features=['sqrt','log2']
 max_depth=[10,20,30,40,50]
 min_samples_leaf=[1,2,5]
-criterion=['gini','entropy']
+criterion=['mse', 'mae']
 n_estimators=[100,500,1000]
-class_weight=['balanced','balanced_subsample']
+#class_weight=['balanced','balanced_subsample']
 
 grid_param={"max_features":max_features,
             "max_depth":max_depth,
             "min_samples_leaf":min_samples_leaf,
             "criterion":criterion,
-            "n_estimators":n_estimators,
-            "class_weight":class_weight}
+            "n_estimators":n_estimators}
 
-rf=RandomForestClassifier()
+rf=RandomForestRegressor()
 
 rf_modal_selection=RandomizedSearchCV(estimator=rf,param_distributions=grid_param,n_iter=10,cv=5,random_state=3)
 
-rf_modal_selection.fit(x_train,Y_train)
+rf_modal_selection.fit(X_train,y_train)
 print(rf_modal_selection.best_params_)
+
+################### Servicing Days Finder ######################
+'''
+Below Modals are for Prediciting 'In how many days servicing will be done' given 
+'OrderType'-->What type of Service needed
+'PlantName1'-->In which service center Customer want to Visit
+'Make'-->What is the make of the Vehicle
+'invoice_month'-->Month in which Customer want to visit
+'KMsReading'-->What is the current KM Reading of the vehicle
+
+'total_days'-->By when servicing will be done
+
+Suggestion to Business:
+Offer a feature in Mahindra First Choice website with above model to suggest users 
+visiting for service if they will get their job done in no of days.
+
+Also we can suggest to visit specific or next day when they will get thier vehicles job done
+in less than today's.    
+'''
+#Trying KNN
+from sklearn.neighbors import KNeighborsRegressor
+KNN_Model=KNeighborsRegressor()
+KNN_Model.fit(X_train, y_train)
+acc_KNN = KNN_Model.score(X_test,y_test)
+print("KNN Accuracy Score",acc_KNN)
+
+#Check Score
+
+#Trying Linear Regression
+from sklearn.linear_model import LinearRegression
+linear_model = LinearRegression()
+linear_model.fit(X_train, y_train)
+acc_linear=linear_model.score(X_test,y_test)
+print("Linear Accuracy Score",acc_linear)
+
+
+#Trying RF Regressior
+from sklearn.ensemble import RandomForestRegressor
+
+rf=RandomForestRegressor()
+rf.fit(X_train, y_train)
+acc_rf=rf.score(X_test,y_test)
+print("Linear Accuracy Score",acc_rf)
+
+
+#Trying Decision Tree Regressior
+from sklearn.tree import DecisionTreeRegressor
+dt=DecisionTreeRegressor()
+dt.fit(X_train, y_train)
+acc_dt=dt.score(X_test,y_test)
+print("Linear Accuracy Score",acc_dt)
+
+################## Stock Prediciton #########
+'''
+Will build Model to Predict Stock of Parts to be kept in given Month
+df_merged[['index','total_days','TotalValue', 'invoice_month','State','Make','Netvalue','PlantName1','TotalValue','invoice_hour','JobCard_hour']]
+'''
+df_merged[['index','JobCard_Month','State','Make','Model','PlantName1',]]
+
+
+
+
+
+['index', 'Plant', 'Name1', 'ValuationArea', 'Customernoplant',
+       'Vendornumberplant', '', 'Name2', '',
+       '', 'PostalCode', 'City', 'Salesorganization', 'State', '',
+       '', '', '', 'Area_Locality',
+        'CustType', 'CustomerNo_', 'District',
+       'KMsReading',
+       'LabourTotal', 'Make',  'Model', '', 'OSLTotal',
+       'OrderType', '', 'PartsTotal', '', 
+       'PlantName1', '', '', '', '',
+       
+       'ServiceAdvisorName', '', 'TechnicianName', '',
+        'TotalValue',
+       'UserID', 'OrderItem', 'Material',
+       'LaborValueNumber', 'Description', 'ItemCategory', 'OrderQuantity',
+       'TargetquantityUoM', 'Netvalue', 'total_days', 'invoice_month',
+       'invoice_hour', 'JobCard_hour', 'inv_job_hour_diff']
+
+
+
+########### Classifier Model Building##################
+data_model_cust_suggestion=df_merged[['OrderType','PlantName1','Make','Model',
+                                      'invoice_month','KMsReading','Service_Class']]
+
+#TODO
+#1.Add date and time for getting time taken in hour
+#Converting time delta in int
+data_model_cust_suggestion.total_days=data_model_cust_suggestion.total_days.dt.days
+
+#Segrigating data im Numerical and Categorical  
+Numeric_data_modal=data_model_cust_suggestion.select_dtypes(exclude='object')
+Cat_data_modal=data_model_cust_suggestion.select_dtypes(include='object')
+#Replace Na
+EDAHelper.replaceNa(Cat_data_modal)
+#Encoding Categorical Data
+encoder_mapping_dmcs=EDAHelper.labelEncoder_Mapper(Cat_data_modal)
+
+#Merging two dataframe to form original
+data_model_cust=pd.concat([Numeric_data_modal, Cat_data_modal],axis=1)
+
+#Splitting Data
+y=data_model_cust['Service_Class']
+X=data_model_cust.drop('Service_Class',axis=1)
+
+
+#Trying RF Classifier
+from sklearn.ensemble import RandomForestClassifier
+
+rf=RandomForestClassifier()
+rf.fit(X_train, y_train)
+acc_rf=rf.score(X_test,y_test)
+print("Score",acc_rf)
+
+data_model_cust['Service_Class'] = np.where((data_model_cust.total_days>1) & (data_model_cust.total_days<=7), 'Within 7 Days', data_model_cust['Service_Class'])

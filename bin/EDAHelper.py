@@ -7,6 +7,7 @@ Created on Fri May 28 23:33:10 2021
 import re
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
+import numpy as np
 
 #Check if there is special character in columns and fill with na   
 def checkSpecialChar_fillna(df):
@@ -145,6 +146,33 @@ def dataTypeCheck(df,column):
             index_list_not_str.append(i)
         
     return index_list_not_str
+
+
+def replaceValue(df,col1,col2,cond,value):
+    """
+    Parameters
+    ----------
+    df : DataFrame
+        DataFrame Whose column value to be changed.
+    col1 : Str
+        Name of Column in which value to be changed.
+    col2 : Str
+        Name of Column in which condition to be checked.
+    cond : Any
+        Conition to be applied for extracting columns for replacement.
+    value : Any
+        Value which to be changed.
+
+    Returns
+    -------
+    None.
+
+    """
+    df[col1] = np.where(df[col2]==cond, value, df[col1])
+    #Refine this condition
+    data_model_cust['Service_Class'] = np.where((data_model_cust.total_days>1) & (data_model_cust.total_days<=7), 'Within 7 Days', data_model_cust['Service_Class'])
+    return None
+
             
         
     
